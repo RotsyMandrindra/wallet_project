@@ -1,17 +1,24 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class Main {
     public static void main(String[] args) {
-        String jdbcUrl = "jdbc:postgresql://localhost:5432/wallet_management";
-        String user = "mandrindra";
-        String password = "Mandrindra$";
+        Properties prop = new Properties();
 
-        try (Connection connection = DriverManager.getConnection(jdbcUrl, user, password)) {
-            System.out.println("successful connection !");
-        } catch (SQLException e) {
-            System.err.println("Connection error : " + e.getMessage());
+        try (InputStream input = Main.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                System.out.println("Sorry, unable to find config.properties");
+                return;
+            }
+            prop.load(input);
+
+            String jdbcUrl = prop.getProperty("jdbcUrl");
+            String user = prop.getProperty("dbUser");
+            String password = prop.getProperty("dbPassword");
+            System.out.println("Connection successfully");
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
