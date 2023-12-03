@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Wallet project
+  description: Wallet project
+  version: 1.0.0
+servers:
+  - url: 'https://wallet.com'
+paths:
+  /account:
+    get:
+      summary: Retrieve the list of accounts
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                - account_id: 1
+                  customer_name: Rakoto
+                  balance: 1000.00
+                  currency:
+                    currency_id: 1
+                    currency_name: US Dollar
+                    currency_code: "USD"
