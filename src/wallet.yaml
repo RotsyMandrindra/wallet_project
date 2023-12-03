@@ -78,3 +78,18 @@ paths:
                 amount: 50.00
                 transaction_date: "2023-12-03"
                 description: expense
+  /currency:
+    get:
+      summary: Retrieve the list of all currency
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                - currency_id: 1
+                  currency_name: US Dollar
+                  currency_code: "USD"
+                - currency_id: 2
+                  currency_name: Euro
+                  currency_code: "EUR"
