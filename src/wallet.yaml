@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Wallet project
   description: Wallet project
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: 'https://wallet.com'
 paths:
@@ -22,3 +22,23 @@ paths:
                     currency_id: 1
                     currency_name: US Dollar
                     currency_code: "USD"
+    post:
+      summary: create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              customer_name: Rasoa
+              balance: 0.00
+              currency_id: 1
+      responses:
+        200:
+          description: Account created successfully
+          content:
+            application/json:
+              example:
+                account_id: 2
+                customer_name: Rasoa
+                balance: 0.00
+                currency_id: 1
