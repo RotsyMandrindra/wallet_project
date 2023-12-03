@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Wallet project
   description: Wallet project
-  version: 1.1.0
+  version: 1.1.1
 servers:
   - url: 'https://wallet.com'
 paths:
@@ -28,10 +28,8 @@ paths:
         required: true
         content:
           application/json:
-            example:
-              customer_name: Rasoa
-              balance: 0.00
-              currency_id: 1
+            schema:
+              $ref: '#/components/schemas/Account'
       responses:
         200:
           description: Account created successfully
@@ -62,11 +60,8 @@ paths:
         required: true
         content:
           application/json:
-            example:
-              account_id: 1
-              amount: 50.00
-              transaction_date: "2023-12-03"
-              description: expense
+            schema:
+              $ref: '#/components/schemas/Transaction'
       responses:
         200:
           description: Transaction created successfully
@@ -93,3 +88,35 @@ paths:
                 - currency_id: 2
                   currency_name: Euro
                   currency_code: "EUR"
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        customer_name:
+          type: string
+        balance:
+          type: number
+        currency:
+          $ref: '#/components/schemas/Currency'
+    Transaction:
+      type: object
+      properties:
+        account_id:
+          type: integer
+        amount:
+          type: number
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+    Currency:
+      type: object
+      properties:
+        currency_id:
+          type: integer
+        currency_name:
+          type: string
+        currency_code:
+          type: string
