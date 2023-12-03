@@ -30,3 +30,24 @@ CREATE TABLE IF NOT EXISTS currency(
     currency_name varchar(200) NOT NULL,
     currency_code varchar(3) NOT NULL
 );
+
+INSERT INTO account (account_id, customer_name, balance, password, currency_id)
+VALUES
+    (1, 'John Doe', 0.00, 'password123', 1),
+    (2, 'Alice Smith', 0.00, 'pass456', 2),
+    (3, 'Bob Johnson', 0.00, 'secret', 3)
+ON CONFLICT(account_id) DO NOTHING;
+
+INSERT INTO currency (currency_id, currency_name, currency_code)
+VALUES
+    (1, 'US Dollar', 'USD'),
+    (2, 'Euro', 'EUR'),
+    (3, 'Ariary', 'AR')
+ON CONFLICT(currency_id) DO NOTHING;
+
+INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description)
+VALUES
+    (1, 1, 50.00, '2023-01-01', 'Deposit'),
+    (2, 2, -20.00, '2023-01-02', 'Withdrawal'),
+    (3, 1, 30.00, '2023-01-03', 'Deposit')
+ON CONFLICT(transaction_id) DO NOTHING;
