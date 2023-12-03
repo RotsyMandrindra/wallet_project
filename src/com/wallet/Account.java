@@ -15,6 +15,10 @@ public class Account {
         this.currency_id = currency_id;
     }
 
+    public Account() {
+
+    }
+
     public int getAccount_id() {
         return account_id;
     }
