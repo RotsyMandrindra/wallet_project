@@ -42,3 +42,39 @@ paths:
                 customer_name: Rasoa
                 balance: 0.00
                 currency_id: 1
+  /transaction:
+    get:
+      summary: Retrieve the list of all transactions
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              example:
+                transaction_id: 1
+                account_id: 1
+                amount: 100
+                transaction_date: "2023-12-03"
+                description: purchase
+    post:
+      summary: carry out a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              account_id: 1
+              amount: 50.00
+              transaction_date: "2023-12-03"
+              description: expense
+      responses:
+        200:
+          description: Transaction created successfully
+          content:
+            application/json:
+              example:
+                transaction_id: 2
+                account_id: 1
+                amount: 50.00
+                transaction_date: "2023-12-03"
+                description: expense
