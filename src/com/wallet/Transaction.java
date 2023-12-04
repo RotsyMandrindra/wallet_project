@@ -1,20 +1,25 @@
 package com.wallet;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
+
 
 public class Transaction {
     private int transaction_id;
     private int account_id;
     private double amount;
-    private LocalDateTime transaction_date;
+    private Timestamp transaction_date;
     private String description;
 
-    public Transaction(int transaction_id, int account_id, double amount, LocalDateTime transaction_date, String description) {
+    public Transaction(int transaction_id, int account_id, double amount, Timestamp transaction_date, String description) {
         this.transaction_id = transaction_id;
         this.account_id = account_id;
         this.amount = amount;
         this.transaction_date = transaction_date;
         this.description = description;
+    }
+
+    public Transaction() {
+
     }
 
     public int getTransaction_id() {
@@ -41,11 +46,11 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public LocalDateTime getTransaction_date() {
+    public Timestamp getTransaction_date() {
         return transaction_date;
     }
 
-    public void setTransaction_date(LocalDateTime transaction_date) {
+    public void setTransaction_date(Timestamp transaction_date) {
         this.transaction_date = transaction_date;
     }
 
