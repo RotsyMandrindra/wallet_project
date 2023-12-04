@@ -11,6 +11,10 @@ public class Currency {
         this.currency_code = currency_code;
     }
 
+    public Currency() {
+
+    }
+
     public int getCurrency_id() {
         return currency_id;
     }
