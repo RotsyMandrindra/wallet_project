@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS "transaction"(
 
 CREATE TABLE IF NOT EXISTS currency(
     currency_id INT PRIMARY KEY,
-    currency_name varchar(200) NOT NULL,
+    currency_name varchar(200) CHECK (currency_name IN ('EURO', 'ARIARY')) NOT NULL,
     currency_code varchar(3) NOT NULL
 );
 
