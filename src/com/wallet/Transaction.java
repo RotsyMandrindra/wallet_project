@@ -2,14 +2,12 @@ package com.wallet;
 
 import java.sql.Timestamp;
 
-
 public class Transaction {
     private int transaction_id;
     private int account_id;
     private double amount;
     private Timestamp transaction_date;
     private String description;
-
     public Transaction(int transaction_id, int account_id, double amount, Timestamp transaction_date, String description) {
         this.transaction_id = transaction_id;
         this.account_id = account_id;
