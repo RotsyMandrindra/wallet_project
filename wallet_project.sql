@@ -9,13 +9,16 @@ END $$;
 
 \c wallet_management;
 
-CREATE TABLE IF NOT EXISTS account(
+CREATE TABLE IF NOT EXISTS account (
     account_id INT PRIMARY KEY,
-    customer_name varchar(200) NOT NULL,
+    account_name VARCHAR(50) NOT NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
-    password varchar(20) NOT NULL,
-    currency_id INT REFERENCES currency(currency_id)
+    last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    password VARCHAR(20) NOT NULL,
+    currency_id INT REFERENCES currency(currency_id),
+    account_type VARCHAR(20) CHECK (account_type IN ('Banque', 'Espèce', 'Mobile Money'))
 );
+
 
 CREATE TABLE IF NOT EXISTS "transaction"(
     transaction_id INT PRIMARY KEY,
