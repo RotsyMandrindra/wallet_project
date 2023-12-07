@@ -16,11 +16,13 @@ public class AccountCrudOperations implements CrudOperations<Account>{
 
             while (resultSet.next()) {
                 Account account = new Account();
-                account.setAccount_id(resultSet.getInt("account_id"));
-                account.setCustomer_name(resultSet.getString("customer_name"));
+                account.setAccountId(resultSet.getInt("account_id"));
+                account.setAccountName(resultSet.getString(" account_name"));
                 account.setBalance(resultSet.getDouble("balance"));
+                account.setLastUpdateDate(resultSet.getTimestamp("last_update_date"));
                 account.setPassword(resultSet.getString("password"));
-                account.setCurrency_id(resultSet.getInt("currency_id"));
+                account.setCurrencyId(resultSet.getInt("currency_id"));
+                account.setAccountType(resultSet.getString("account_type"));
                 accounts.add(account);
             }
 
@@ -33,16 +35,18 @@ public class AccountCrudOperations implements CrudOperations<Account>{
 
     @Override
     public List<Account> saveAll(List<Account> toSave) {
-        String query = "INSERT INTO account (customer_name, balance, password, currency_id) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DataConfig.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             for (Account account : toSave) {
-                preparedStatement.setString(1, account.getCustomer_name());
+                preparedStatement.setString(1, account.getAccountName());
                 preparedStatement.setDouble(2, account.getBalance());
-                preparedStatement.setString(3, account.getPassword());
-                preparedStatement.setInt(4, account.getCurrency_id());
+                preparedStatement.setTimestamp(3, account.getLastUpdateDate());
+                preparedStatement.setString(4, account.getPassword());
+                preparedStatement.setString(5, account.getAccountType());
+                preparedStatement.setInt(6, account.getCurrencyId());
                 preparedStatement.addBatch();
             }
 
@@ -57,23 +61,25 @@ public class AccountCrudOperations implements CrudOperations<Account>{
 
     @Override
     public Account save(Account toSave) {
-        String query = "INSERT INTO account (customer_name, balance, password, currency_id) VALUES (?, ?, ?, ?)";
+        String query = "INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DataConfig.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query,
                      PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-            preparedStatement.setString(1, toSave.getCustomer_name());
+            preparedStatement.setString(1, toSave.getAccountName());
             preparedStatement.setDouble(2, toSave.getBalance());
-            preparedStatement.setString(3, toSave.getPassword());
-            preparedStatement.setInt(4, toSave.getCurrency_id());
+            preparedStatement.setTimestamp(3, toSave.getLastUpdateDate());
+            preparedStatement.setString(4, toSave.getPassword());
+            preparedStatement.setString(5, toSave.getAccountType());
+            preparedStatement.setInt(6, toSave.getCurrencyId());
 
             int affectedRows = preparedStatement.executeUpdate();
 
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        toSave.setAccount_id(generatedKeys.getInt(1));
+                        toSave.setAccountId(generatedKeys.getInt(1));
                     } else {
                         throw new SQLException("Creating account failed, no ID obtained.");
                     }
@@ -94,7 +100,7 @@ public class AccountCrudOperations implements CrudOperations<Account>{
         try (Connection connection = DataConfig.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setInt(1, toDelete.getAccount_id());
+            preparedStatement.setInt(1, toDelete.getAccountId());
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {
