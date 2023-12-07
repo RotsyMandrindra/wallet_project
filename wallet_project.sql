@@ -24,9 +24,12 @@ CREATE TABLE IF NOT EXISTS "transaction"(
     transaction_id INT PRIMARY KEY,
     account_id INT REFERENCES account(account_id),
     amount DECIMAL(10, 2) DEFAULT 0.00,
-    transaction_date DATE,
-    description varchar(200)
+    transaction_date TIMESTAMP,  
+    description VARCHAR(200),
+    transaction_type VARCHAR(10) CHECK (transaction_type IN ('debit', 'credit')),
+    label VARCHAR(50) 
 );
+
 
 CREATE TABLE IF NOT EXISTS currency(
     currency_id INT PRIMARY KEY,
