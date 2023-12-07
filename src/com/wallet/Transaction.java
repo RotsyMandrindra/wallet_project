@@ -6,19 +6,23 @@ public class Transaction {
     private int transactionId;
     private int accountId;
     private double amount;
-    private Timestamp transaction_date;
+    private Timestamp transactionDate;
     private String description;
-    private String transaction_type;
+    private String transactionType;
     private String label;
 
     public Transaction(int transactionId, int accountId, double amount, Timestamp transaction_date, String description, String transaction_type, String label) {
         this.transactionId = transactionId;
         this.accountId = accountId;
         this.amount = amount;
-        this.transaction_date = transaction_date;
+        this.transactionDate = transactionDate;
         this.description = description;
-        this.transaction_type = transaction_type;
+        this.transactionType = transactionType;
         this.label = label;
+    }
+
+    public Transaction() {
+
     }
 
     public int getTransactionId() {
@@ -45,12 +49,12 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public Timestamp getTransaction_date() {
-        return transaction_date;
+    public Timestamp getTransactionDate() {
+        return transactionDate;
     }
 
-    public void setTransaction_date(Timestamp transaction_date) {
-        this.transaction_date = transaction_date;
+    public void setTransactionDate(Timestamp transactionDate) {
+        this.transactionDate = transactionDate;
     }
 
     public String getDescription() {
@@ -61,12 +65,12 @@ public class Transaction {
         this.description = description;
     }
 
-    public String getTransaction_type() {
-        return transaction_type;
+    public String getTransactionType() {
+        return transactionType;
     }
 
-    public void setTransaction_type(String transaction_type) {
-        this.transaction_type = transaction_type;
+    public void setTransactionType(String transactionType) {
+        this.transactionType = transactionType;
     }
 
     public String getLabel() {
