@@ -78,3 +78,12 @@ VALUES
 
  GRANT SELECT ON TABLE currency TO mandrindra;
 
+CREATE TABLE IF NOT EXISTS currencyValue (
+    ID SERIAL PRIMARY KEY,
+    ID_Devise_source INT REFERENCES currency(currency_id),
+    ID_Devise_destination INT REFERENCES currency(currency_id),
+    Montant DECIMAL(10, 2) NOT NULL,
+    Date_effet DATE NOT NULL
+);
+
+GRANT SELECT ON TABLE currencyValue TO mandrindra;

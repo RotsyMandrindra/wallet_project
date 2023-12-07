@@ -95,4 +95,26 @@ public class MoneyTransfer {
             statement.executeUpdate();
         }
     }
+
+    private static double getAriaryBalanceAtDate(Connection connection, int accountId, Timestamp targetDate) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount * cv.Montant ELSE -amount * cv.Montant END), 0) AS balance " +
+                "FROM \"transaction\" t " +
+                "JOIN CurrencyValue cv ON t.transaction_date >= cv.Date_effet " +
+                "WHERE t.account_id = ? AND t.transaction_date <= ? " +
+                "AND cv.ID_Devise_source = (SELECT currency_id FROM currency WHERE currency_name = 'EURO') " +
+                "AND cv.ID_Devise_destination = (SELECT currency_id FROM currency WHERE currency_name = 'ARIARY')";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, accountId);
+            statement.setTimestamp(2, targetDate);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getDouble("balance");
+                } else {
+                    throw new SQLException("No results obtained.");
+                }
+            }
+        }
+    }
 }
