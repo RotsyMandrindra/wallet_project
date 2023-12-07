@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS account (
     last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     password VARCHAR(20) NOT NULL,
     currency_id INT REFERENCES currency(currency_id),
-    account_type VARCHAR(20) CHECK (account_type IN ('Banque', 'Espèce', 'Mobile Money'))
+    account_type VARCHAR(20) CHECK (account_type IN ('Bank', 'Espece', 'Mobile Money'))
 );
 
 
@@ -37,23 +37,44 @@ CREATE TABLE IF NOT EXISTS currency(
     currency_code varchar(3) NOT NULL
 );
 
-INSERT INTO account (account_id, customer_name, balance, password, currency_id)
+INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type)
 VALUES
-    (1, 'John Doe', 0.00, 'password123', 1),
-    (2, 'Alice Smith', 0.00, 'pass456', 2),
-    (3, 'Bob Johnson', 0.00, 'secret', 3)
-ON CONFLICT(account_id) DO NOTHING;
+    (1, 'Bank account', 1000.00, 'motdepasse123', 1, 'Bank')
+    ON CONFLICT(account_id) DO NOTHING;
+
+INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type)
+VALUES
+    (2, 'Bank account', 500.00, 'mdp456', 2, 'Espece')
+    ON CONFLICT(account_id) DO NOTHING;
+
+INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type)
+VALUES
+    (3, 'Mobile Money Account', 200.00, 'secret789', 1, 'Mobile Money')
+    ON CONFLICT(account_id) DO NOTHING;
+
+
 
 INSERT INTO currency (currency_id, currency_name, currency_code)
 VALUES
-    (1, 'US Dollar', 'USD'),
-    (2, 'Euro', 'EUR'),
-    (3, 'Ariary', 'AR')
+    (1, 'ARIARY', 'MGA'),
+    (2, 'EURO', 'EUR')
 ON CONFLICT(currency_id) DO NOTHING;
 
-INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description)
+INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description, transaction_type, label)
 VALUES
-    (1, 1, 50.00, '2023-01-01', 'Deposit'),
-    (2, 2, -20.00, '2023-01-02', 'Withdrawal'),
-    (3, 1, 30.00, '2023-01-03', 'Deposit')
-ON CONFLICT(transaction_id) DO NOTHING;
+    (1, 1, 500.00, '2023-12-07 12:00:00', 'salary', 'credit', 'Initial deposit') ON CONFLICT(transaction_id) DO NOTHING;
+
+INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description, transaction_type, label)
+VALUES
+    (2, 2, 100.00, '2023-12-08 14:30:00', 'shoes', 'debit', 'bank savings') ON CONFLICT(transaction_id) DO NOTHING;
+
+INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description, transaction_type, label)
+VALUES
+    (3, 1, 200.00, '2023-12-10 10:45:00', 'Payment by card', 'debit', 'Buy online') ON CONFLICT(transaction_id) DO NOTHING;
+
+ GRANT SELECT ON TABLE account TO mandrindra;
+
+ GRANT SELECT ON TABLE "transaction" TO mandrindra;
+
+ GRANT SELECT ON TABLE currency TO mandrindra;
+

@@ -1,38 +1,38 @@
 package com.wallet;
 
+import java.sql.Timestamp;
+
 public class Account {
-    private int account_id;
-    private String customer_name;
+     private int accountId;
+    private String accountName;
     private double balance;
+    private Timestamp lastUpdateDate;
     private String password;
-    private int currency_id;
+    private String accountType;
 
-    public Account(int account_id, String customer_name, double balance, String password, int currency_id) {
-        this.account_id = account_id;
-        this.customer_name = customer_name;
+    public Account(int accountId, String accountName, double balance, Timestamp lastUpdateDate, String password, String accountType) {
+        this.accountId = accountId;
+        this.accountName = accountName;
         this.balance = balance;
+        this.lastUpdateDate = lastUpdateDate;
         this.password = password;
-        this.currency_id = currency_id;
+        this.accountType = accountType;
     }
 
-    public Account() {
-
+    public int getAccountId() {
+        return accountId;
     }
 
-    public int getAccount_id() {
-        return account_id;
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
-    public void setAccount_id(int account_id) {
-        this.account_id = account_id;
+    public String getAccountName() {
+        return accountName;
     }
 
-    public String getCustomer_name() {
-        return customer_name;
-    }
-
-    public void setCustomer_name(String customer_name) {
-        this.customer_name = customer_name;
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public double getBalance() {
@@ -43,6 +43,14 @@ public class Account {
         this.balance = balance;
     }
 
+    public Timestamp getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(Timestamp lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -51,11 +59,11 @@ public class Account {
         this.password = password;
     }
 
-    public int getCurrency_id() {
-        return currency_id;
+    public String getAccountType() {
+        return accountType;
     }
 
-    public void setCurrency_id(int currency_id) {
-        this.currency_id = currency_id;
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
     }
 }
