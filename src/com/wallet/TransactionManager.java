@@ -7,8 +7,6 @@ import java.net.URL;
 import java.sql.*;
 import java.util.Properties;
 
-import static org.postgresql.PGProperty.PASSWORD;
-import static org.postgresql.jdbc.EscapedFunctions.USER;
 
 public class TransactionManager {
     public static void main(String[] args) {
@@ -20,12 +18,7 @@ public class TransactionManager {
             String dbPassword = properties.getProperty("dbPassword");
 
             try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
-                performTransaction(connection);
-                getAccountType(connection);
-                updateAccountBalance(connection);
-                isBalanceSufficient(connection);
-                insertTransaction(connection);
-                displayAccountDetails(connection);
+
             }
         } catch (SQLException | IOException e) {
             e.printStackTrace();
