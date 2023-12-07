@@ -45,14 +45,18 @@ public class Main {
                 int transactionId = resultSet.getInt("transaction_id");
                 int accountId = resultSet.getInt("account_id");
                 Double amount = resultSet.getDouble("amount");
-                Date transactionDate = resultSet.getDate("transaction_date");
+                Timestamp transactionDate = resultSet.getTimestamp("transaction_date");
                 String description = resultSet.getString("description");
+                String transactionType = resultSet.getString("transaction_type");
+                String label = resultSet.getString("label");
 
                 System.out.println("Transaction ID: " + transactionId +
                         ", Account ID: " + accountId +
                         ", Amount: " + amount +
                         ", Transaction Date: " + transactionDate +
-                        ", Description: " + description);
+                        ", Description: " + description +
+                        ", Transaction type: " + transactionType +
+                        ", Label: " + label);
             }
         }
     }
@@ -63,13 +67,19 @@ public class Main {
             ResultSet resultSet = statement.executeQuery("SELECT * FROM account");
             while (resultSet.next()) {
                 int accountId = resultSet.getInt("account_id");
-                String customerName = resultSet.getString("customer_name");
+                String accountName = resultSet.getString("account_name");
                 Double balance = resultSet.getDouble("balance");
+                Timestamp lastUpdateDate = resultSet.getTimestamp("last_update_date");
+                String password = resultSet.getString("password");
+                String accountType = resultSet.getString("account_type");
                 int currencyId = resultSet.getInt("currency_id");
 
                 System.out.println("Account ID: " + accountId +
-                        ", Customer Name: " + customerName +
+                        ", Account Name: " + accountName +
                         ", Balance: " + balance +
+                        ", Last Update Date: " + lastUpdateDate +
+                        ", Password: " + password +
+                        ", Account Type: " + accountType +
                         ", Currency ID: " + currencyId);
             }
         }
