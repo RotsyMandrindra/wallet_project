@@ -9,14 +9,16 @@ public class Account {
     private Timestamp lastUpdateDate;
     private String password;
     private String accountType;
+    private int currencyId;
 
-    public Account(int accountId, String accountName, double balance, Timestamp lastUpdateDate, String password, String accountType) {
+    public Account(int accountId, String accountName, double balance, Timestamp lastUpdateDate, String password, String accountType, int currencyId) {
         this.accountId = accountId;
         this.accountName = accountName;
         this.balance = balance;
         this.lastUpdateDate = lastUpdateDate;
         this.password = password;
         this.accountType = accountType;
+        this.currencyId = currencyId;
     }
 
     public int getAccountId() {
@@ -65,5 +67,13 @@ public class Account {
 
     public void setAccountType(String accountType) {
         this.accountType = accountType;
+    }
+
+    public int getCurrencyId() {
+        return currencyId;
+    }
+
+    public void setCurrencyId(int currencyId) {
+        this.currencyId = currencyId;
     }
 }

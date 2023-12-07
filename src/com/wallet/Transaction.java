@@ -3,37 +3,38 @@ package com.wallet;
 import java.sql.Timestamp;
 
 public class Transaction {
-    private int transaction_id;
-    private int account_id;
+    private int transactionId;
+    private int accountId;
     private double amount;
     private Timestamp transaction_date;
     private String description;
-    public Transaction(int transaction_id, int account_id, double amount, Timestamp transaction_date, String description) {
-        this.transaction_id = transaction_id;
-        this.account_id = account_id;
+    private String transaction_type;
+    private String label;
+
+    public Transaction(int transactionId, int accountId, double amount, Timestamp transaction_date, String description, String transaction_type, String label) {
+        this.transactionId = transactionId;
+        this.accountId = accountId;
         this.amount = amount;
         this.transaction_date = transaction_date;
         this.description = description;
+        this.transaction_type = transaction_type;
+        this.label = label;
     }
 
-    public Transaction() {
-
+    public int getTransactionId() {
+        return transactionId;
     }
 
-    public int getTransaction_id() {
-        return transaction_id;
+    public void setTransactionId(int transactionId) {
+        this.transactionId = transactionId;
     }
 
-    public void setTransaction_id(int transaction_id) {
-        this.transaction_id = transaction_id;
+    public int getAccountId() {
+        return accountId;
     }
 
-    public int getAccount_id() {
-        return account_id;
-    }
-
-    public void setAccount_id(int account_id) {
-        this.account_id = account_id;
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
     public double getAmount() {
@@ -58,6 +59,22 @@ public class Transaction {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTransaction_type() {
+        return transaction_type;
+    }
+
+    public void setTransaction_type(String transaction_type) {
+        this.transaction_type = transaction_type;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 }
 
