@@ -128,3 +128,40 @@ GRANT SELECT ON TABLE exchange_rate TO mandrindra;
 INSERT INTO exchange_rate (date, rate) VALUES ('2023-12-05', 4600);
 
 GRANT UPDATE ON TABLE exchange_rate TO mandrindra;
+
+CREATE TABLE IF NOT EXISTS category (
+    category_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(50) UNIQUE NOT NULL,
+    transaction_type VARCHAR(10) CHECK (transaction_type IN ('debit', 'credit'))
+);
+
+INSERT INTO category (name, transaction_type)
+VALUES 
+    ('Restaurant', 'debit'),
+    ('Téléphone et Multimédia', 'debit'),
+    ('Salaire', 'credit'),
+    ('Prêt', 'credit')
+ON CONFLICT (name) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION calculate_balance(account_id UUID, start_date TIMESTAMP, end_date TIMESTAMP)
+RETURNS TABLE (total_credit DECIMAL, total_debit DECIMAL) AS
+$$
+BEGIN
+    SELECT
+        COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount END), 0) AS total_credit,
+        COALESCE(SUM(CASE WHEN transaction_type = 'debit' THEN amount END), 0) AS total_debit
+    INTO
+        total_credit,
+        total_debit
+    FROM
+        transaction
+    WHERE
+        transaction.account_id = calculate_balance.account_id
+        AND transaction.transaction_date BETWEEN start_date AND end_date;
+
+    RETURN NEXT;
+END;
+$$ LANGUAGE PLPGSQL;
+
+
+SELECT * FROM calculate_balance('efcf34e5-c7a2-427d-a402-f466b36453d1', '2023-12-08 17:33:57.331554', '2023-12-08 17:33:57.331554');
