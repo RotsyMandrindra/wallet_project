@@ -166,15 +166,15 @@ $$ LANGUAGE PLPGSQL;
 
 SELECT * FROM calculate_balance('efcf34e5-c7a2-427d-a402-f466b36453d1', '2023-12-08 17:33:57.331554', '2023-12-08 17:33:57.331554');
 
-CREATE OR REPLACE FUNCTION calculate_category_balance(account_id UUID, start_date TIMESTAMP, end_date TIMESTAMP)
+CREATE OR REPLACE FUNCTION calculate_category_balance(account_id_param UUID, start_date_param TIMESTAMP, end_date_param TIMESTAMP)
 RETURNS TABLE (restaurant DECIMAL, phone_multimedia DECIMAL, salary DECIMAL, loan DECIMAL) AS
 $$
 BEGIN
     SELECT
-        COALESCE(SUM(CASE WHEN t.category_id = 'Restaurant' THEN amount END), 0) AS restaurant,
-        COALESCE(SUM(CASE WHEN t.category_id = 'Phone and Multimedia' THEN amount END), 0) AS phone_multimedia,
-        COALESCE(SUM(CASE WHEN t.category_id = 'Salary' THEN amount END), 0) AS salary,
-        COALESCE(SUM(CASE WHEN t.category_id = 'Loan' THEN amount END), 0) AS loan
+        COALESCE(SUM(CASE WHEN c.name = 'Restaurant' THEN t.amount END), 0) AS restaurant,
+        COALESCE(SUM(CASE WHEN c.name = 'Phone and Multimedia' THEN t.amount END), 0) AS phone_multimedia,
+        COALESCE(SUM(CASE WHEN c.name = 'Salary' THEN t.amount END), 0) AS salary,
+        COALESCE(SUM(CASE WHEN c.name = 'Loan' THEN t.amount END), 0) AS loan
     INTO
         restaurant,
         phone_multimedia,
@@ -183,10 +183,12 @@ BEGIN
     FROM
         category c
     LEFT JOIN
-        transaction t ON c.name = t.category_id AND t.account_id = account_id AND t.transaction_date BETWEEN start_date AND end_date
+        transaction t ON c.name = t.label AND t.account_id = account_id_param AND t.transaction_date BETWEEN start_date_param AND end_date_param
     GROUP BY
         c.name;
 
     RETURN NEXT;
 END;
 $$ LANGUAGE PLPGSQL;
+
+GRANT SELECT ON TABLE category TO mandrindra;
