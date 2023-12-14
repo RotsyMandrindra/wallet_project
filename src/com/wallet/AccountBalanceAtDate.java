@@ -15,7 +15,7 @@ public class AccountBalanceAtDate {
             String dbPassword = properties.getProperty("dbPassword");
 
             try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
-                int accountId = 1; // Remplacez ceci par l'ID du compte dont vous souhaitez obtenir le solde
+                int accountId = 1;
                 Timestamp targetDate = Timestamp.valueOf("2023-12-06 15:45:00");
 
                 double balance = getAccountBalanceAtDate(connection, accountId, targetDate);

@@ -1,25 +1,25 @@
 package com.wallet;
 
+import java.util.UUID;
+
 public class Currency {
-    private int currency_id;
+    private UUID currency_id;
     private String currency_name;
     private String currency_code;
+    public Currency() {
 
-    public Currency(int currency_id, String currency_name, String currency_code) {
+    }
+    public Currency(UUID currency_id, String currency_name, String currency_code) {
         this.currency_id = currency_id;
         this.currency_name = currency_name;
         this.currency_code = currency_code;
     }
 
-    public Currency() {
-
-    }
-
-    public int getCurrency_id() {
+    public UUID getCurrency_id() {
         return currency_id;
     }
 
-    public void setCurrency_id(int currency_id) {
+    public void setCurrency_id(UUID currency_id) {
         this.currency_id = currency_id;
     }
 

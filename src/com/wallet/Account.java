@@ -1,17 +1,20 @@
 package com.wallet;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 
 public class Account {
-     private int accountId;
+     private UUID accountId;
     private String accountName;
     private double balance;
     private Timestamp lastUpdateDate;
     private String password;
     private String accountType;
     private int currencyId;
+    public Account() {
 
-    public Account(int accountId, String accountName, double balance, Timestamp lastUpdateDate, String password, String accountType, int currencyId) {
+    }
+    public Account(UUID accountId, String accountName, double balance, Timestamp lastUpdateDate, String password, String accountType, int currencyId) {
         this.accountId = accountId;
         this.accountName = accountName;
         this.balance = balance;
@@ -21,15 +24,11 @@ public class Account {
         this.currencyId = currencyId;
     }
 
-    public Account() {
-
-    }
-
-    public int getAccountId() {
+    public UUID getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(int accountId) {
+    public void setAccountId(UUID accountId) {
         this.accountId = accountId;
     }
 

@@ -3,8 +3,9 @@ package com.wallet;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class AccountCrudOperations implements CrudOperations<Account>{
+public class AccountCrudOperations implements CrudOperations<Account> {
     @Override
     public List<Account> findAll() {
         List<Account> accounts = new ArrayList<>();
@@ -16,8 +17,8 @@ public class AccountCrudOperations implements CrudOperations<Account>{
 
             while (resultSet.next()) {
                 Account account = new Account();
-                account.setAccountId(resultSet.getInt("account_id"));
-                account.setAccountName(resultSet.getString(" account_name"));
+                account.setAccountId(UUID.fromString(resultSet.getString("account_id")));
+                account.setAccountName(resultSet.getString("account_name"));
                 account.setBalance(resultSet.getDouble("balance"));
                 account.setLastUpdateDate(resultSet.getTimestamp("last_update_date"));
                 account.setPassword(resultSet.getString("password"));
@@ -35,17 +36,19 @@ public class AccountCrudOperations implements CrudOperations<Account>{
 
     @Override
     public List<Account> saveAll(List<Account> toSave) {
-        String query = "INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type) VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type) VALUES (?, ?, ?, ?, ?, ?)"
+                + " ON DUPLICATE KEY UPDATE account_name=VALUES(account_name), balance=VALUES(balance), last_update_date=VALUES(last_update_date),"
+                + " password=VALUES(password), currency_id=VALUES(currency_id), account_type=VALUES(account_type)";
 
         try (Connection connection = DataConfig.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             for (Account account : toSave) {
-                preparedStatement.setString(1, account.getAccountName());
-                preparedStatement.setDouble(2, account.getBalance());
-                preparedStatement.setTimestamp(3, account.getLastUpdateDate());
-                preparedStatement.setString(4, account.getPassword());
-                preparedStatement.setString(5, account.getAccountType());
+                preparedStatement.setObject(1, account.getAccountId());
+                preparedStatement.setString(2, account.getAccountName());
+                preparedStatement.setDouble(3, account.getBalance());
+                preparedStatement.setTimestamp(4, account.getLastUpdateDate());
+                preparedStatement.setString(5, account.getPassword());
                 preparedStatement.setInt(6, account.getCurrencyId());
                 preparedStatement.addBatch();
             }
@@ -61,29 +64,25 @@ public class AccountCrudOperations implements CrudOperations<Account>{
 
     @Override
     public Account save(Account toSave) {
-        String query = "INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type) VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type) VALUES (?, ?, ?, ?, ?, ?)"
+                + " ON DUPLICATE KEY UPDATE account_name=VALUES(account_name), balance=VALUES(balance), last_update_date=VALUES(last_update_date),"
+                + " password=VALUES(password), currency_id=VALUES(currency_id), account_type=VALUES(account_type)";
 
         try (Connection connection = DataConfig.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query,
                      PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-            preparedStatement.setString(1, toSave.getAccountName());
-            preparedStatement.setDouble(2, toSave.getBalance());
-            preparedStatement.setTimestamp(3, toSave.getLastUpdateDate());
-            preparedStatement.setString(4, toSave.getPassword());
-            preparedStatement.setString(5, toSave.getAccountType());
+            preparedStatement.setObject(1, toSave.getAccountId());
+            preparedStatement.setString(2, toSave.getAccountName());
+            preparedStatement.setDouble(3, toSave.getBalance());
+            preparedStatement.setTimestamp(4, toSave.getLastUpdateDate());
+            preparedStatement.setString(5, toSave.getPassword());
             preparedStatement.setInt(6, toSave.getCurrencyId());
 
             int affectedRows = preparedStatement.executeUpdate();
 
-            if (affectedRows > 0) {
-                try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        toSave.setAccountId(generatedKeys.getInt(1));
-                    } else {
-                        throw new SQLException("Creating account failed, no ID obtained.");
-                    }
-                }
+            if (affectedRows == 0) {
+                throw new SQLException("Creating account failed, no rows affected.");
             }
 
         } catch (SQLException e) {
@@ -100,7 +99,7 @@ public class AccountCrudOperations implements CrudOperations<Account>{
         try (Connection connection = DataConfig.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setInt(1, toDelete.getAccountId());
+            preparedStatement.setObject(1, toDelete.getAccountId());
             preparedStatement.executeUpdate();
 
         } catch (SQLException e) {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.Properties;
+import java.util.UUID;
 
 public class MoneyTransfer {
     public static void main(String[] args) {
@@ -15,8 +16,8 @@ public class MoneyTransfer {
             String dbPassword = properties.getProperty("dbPassword");
 
             try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
-                int debitAccountId = 1;
-                int creditAccountId = 2;
+                UUID debitAccountId = UUID.fromString("2e243ca9-a49d-4ca4-b699-3f4a6d64364d");
+                UUID creditAccountId = UUID.fromString("1a2d4281-1204-42f1-b9ca-adcc85fbadf9");
                 double amount = 100.0;
 
                 transferMoney(connection, debitAccountId, creditAccountId, amount);
@@ -38,7 +39,7 @@ public class MoneyTransfer {
         return properties;
     }
 
-    private static void transferMoney(Connection connection, int debitAccountId, int creditAccountId, double amount) throws SQLException {
+    private static void transferMoney(Connection connection, UUID debitAccountId, UUID creditAccountId, double amount) throws SQLException {
         if (debitAccountId == creditAccountId) {
             throw new IllegalArgumentException("Le compte débiteur ne peut pas être le même que le compte créditeur.");
         }
@@ -46,9 +47,9 @@ public class MoneyTransfer {
         connection.setAutoCommit(false);
 
         try {
-            int debitTransactionId = performTransaction(connection, debitAccountId, -amount, "Débit pour transfert", "Transfert");
+            UUID debitTransactionId = performTransaction(connection, debitAccountId, -amount, "Débit pour transfert", "Transfert");
 
-            int creditTransactionId = performTransaction(connection, creditAccountId, amount, "Crédit pour transfert", "Transfert");
+            UUID creditTransactionId = performTransaction(connection, creditAccountId, amount, "Crédit pour transfert", "Transfert");
 
             addTransferHistoryEntry(connection, debitTransactionId, creditTransactionId);
 
@@ -63,12 +64,12 @@ public class MoneyTransfer {
         }
     }
 
-    private static int performTransaction(Connection connection, int accountId, double amount, String description, String label) throws SQLException {
+    private static UUID performTransaction(Connection connection, UUID accountId, double amount, String description, String label) throws SQLException {
         String sql = "INSERT INTO transaction (account_id, amount, transaction_date, description, transaction_type, label) " +
                 "VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?, ?) RETURNING transaction_id";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, accountId);
+            statement.setObject(1, accountId);
             statement.setDouble(2, amount);
             statement.setString(3, description);
             statement.setString(4, amount < 0 ? "debit" : "credit");
@@ -77,20 +78,21 @@ public class MoneyTransfer {
             ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
-                return resultSet.getInt("transaction_id");
+                return (UUID) resultSet.getObject("transaction_id", UUID.class);
             } else {
                 throw new SQLException("Échec de l'insertion de la transaction.");
             }
         }
     }
 
-    private static void addTransferHistoryEntry(Connection connection, int debitTransactionId, int creditTransactionId) throws SQLException {
+
+    private static void addTransferHistoryEntry(Connection connection, UUID debitTransactionId, UUID creditTransactionId) throws SQLException {
         String sql = "INSERT INTO TransferHistory (debit_transaction_id, credit_transaction_id, transfer_date) " +
                 "VALUES (?, ?, CURRENT_TIMESTAMP)";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, debitTransactionId);
-            statement.setInt(2, creditTransactionId);
+            statement.setObject(1, debitTransactionId);
+            statement.setObject(2, creditTransactionId);
 
             statement.executeUpdate();
         }
@@ -105,7 +107,7 @@ public class MoneyTransfer {
                 "AND cv.ID_Devise_destination = (SELECT currency_id FROM currency WHERE currency_name = 'ARIARY')";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, accountId);
+            statement.setObject(1, accountId);
             statement.setTimestamp(2, targetDate);
 
             try (ResultSet resultSet = statement.executeQuery()) {

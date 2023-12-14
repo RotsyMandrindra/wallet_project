@@ -1,76 +1,70 @@
 CREATE ROLE prog_admin WITH LOGIN PASSWORD '123456';
 
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'wallet_management') THEN
-        CREATE DATABASE wallet_management;
-    END IF;
-END $$;
-
+CREATE DATABASE IF NOT EXISTS wallet_management;
 \c wallet_management;
 
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS account (
-    account_id INT PRIMARY KEY,
-    account_name VARCHAR(50) NOT NULL,
+    account_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    account_name VARCHAR(50) UNIQUE NOT NULL,
     balance DECIMAL(10, 2) DEFAULT 0.00,
     last_update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     password VARCHAR(20) NOT NULL,
-    currency_id INT REFERENCES currency(currency_id),
+    currency_id UUID REFERENCES currency(currency_id),
     account_type VARCHAR(20) CHECK (account_type IN ('Bank', 'Espece', 'Mobile Money'))
 );
 
 
-CREATE TABLE IF NOT EXISTS "transaction"(
-    transaction_id INT PRIMARY KEY,
-    account_id INT REFERENCES account(account_id),
+CREATE TABLE IF NOT EXISTS "transaction" (
+    transaction_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    account_id UUID REFERENCES account(account_id),
     amount DECIMAL(10, 2) DEFAULT 0.00,
     transaction_date TIMESTAMP,  
     description VARCHAR(200),
     transaction_type VARCHAR(10) CHECK (transaction_type IN ('debit', 'credit')),
-    label VARCHAR(50) 
+    label VARCHAR(50),
+    UNIQUE (account_id, transaction_date, description)
 );
 
 
-CREATE TABLE IF NOT EXISTS currency(
-    currency_id INT PRIMARY KEY,
-    currency_name varchar(200) CHECK (currency_name IN ('EURO', 'ARIARY')) NOT NULL,
+CREATE TABLE IF NOT EXISTS currency (
+    currency_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    currency_name varchar(200) UNIQUE CHECK (currency_name IN ('EURO', 'ARIARY')) NOT NULL,
     currency_code varchar(3) NOT NULL
 );
 
-INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type)
-VALUES
-    (1, 'Bank account', 1000.00, 'motdepasse123', 1, 'Bank')
-    ON CONFLICT(account_id) DO NOTHING;
+INSERT INTO account (account_name, balance, password, currency_id, account_type) VALUES
+    ('John Doe', 1000.00, 'password123', (SELECT currency_id FROM currency WHERE currency_name = 'EURO'), 'Bank')
+    ON CONFLICT (account_name) DO NOTHING;
 
-INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type)
-VALUES
-    (2, 'Bank account', 500.00, 'mdp456', 2, 'Espece')
-    ON CONFLICT(account_id) DO NOTHING;
+INSERT INTO account (account_name, balance, password, currency_id, account_type) VALUES
+    ('Jane Smith', 500.00, 'pass456', (SELECT currency_id FROM currency WHERE currency_name = 'ARIARY'), 'Espece')
+    ON CONFLICT (account_name) DO NOTHING;
 
-INSERT INTO account (account_id, account_name, balance, password, currency_id, account_type)
-VALUES
-    (3, 'Mobile Money Account', 200.00, 'secret789', 1, 'Mobile Money')
-    ON CONFLICT(account_id) DO NOTHING;
+INSERT INTO account (account_name, balance, password, currency_id, account_type) VALUES
+    ('Bob Johnson', 200.00, 'secure789', (SELECT currency_id FROM currency WHERE currency_name = 'EURO'), 'Mobile Money')
+    ON CONFLICT (account_name) DO NOTHING;
 
+INSERT INTO currency (currency_name, currency_code) VALUES 
+    ('EURO', 'EUR')
+    ON CONFLICT (currency_name) DO NOTHING;
 
+INSERT INTO currency (currency_name, currency_code) VALUES 
+    ('ARIARY', 'MGA')
+    ON CONFLICT (currency_name) DO NOTHING;
 
-INSERT INTO currency (currency_id, currency_name, currency_code)
-VALUES
-    (1, 'ARIARY', 'MGA'),
-    (2, 'EURO', 'EUR')
-ON CONFLICT(currency_id) DO NOTHING;
+INSERT INTO "transaction" (account_id, amount, transaction_date, description, transaction_type, label) VALUES
+    ((SELECT account_id FROM account WHERE account_name = 'Bob Johnson'), 100.00, '2023-01-03 12:00:00', 'Transfer', 'debit', 'Friend Payment')
+    ON CONFLICT (account_id, transaction_date, description) DO NOTHING;
 
-INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description, transaction_type, label)
-VALUES
-    (1, 1, 500.00, '2023-12-07 12:00:00', 'salary', 'credit', 'Initial deposit') ON CONFLICT(transaction_id) DO NOTHING;
+INSERT INTO "transaction" (account_id, amount, transaction_date, description, transaction_type, label) VALUES
+    ((SELECT account_id FROM account WHERE account_name = 'Bob Johnson'), 150.00, '2023-01-04 14:30:00', 'Purchase', 'debit', 'Online Shopping')
+    ON CONFLICT (account_id, transaction_date, description) DO NOTHING;
 
-INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description, transaction_type, label)
-VALUES
-    (2, 2, 100.00, '2023-12-08 14:30:00', 'shoes', 'debit', 'bank savings') ON CONFLICT(transaction_id) DO NOTHING;
-
-INSERT INTO "transaction" (transaction_id, account_id, amount, transaction_date, description, transaction_type, label)
-VALUES
-    (3, 1, 200.00, '2023-12-10 10:45:00', 'Payment by card', 'debit', 'Buy online') ON CONFLICT(transaction_id) DO NOTHING;
+INSERT INTO "transaction" (account_id, amount, transaction_date, description, transaction_type, label) VALUES
+    ((SELECT account_id FROM account WHERE account_name = 'Bob Johnson'), 200.00, '2023-01-05 10:00:00', 'Refund', 'credit', 'Product Return')
+    ON CONFLICT (account_id, transaction_date, description) DO NOTHING;
 
  GRANT SELECT ON TABLE account TO mandrindra;
 
@@ -79,11 +73,21 @@ VALUES
  GRANT SELECT ON TABLE currency TO mandrindra;
 
 CREATE TABLE IF NOT EXISTS currencyValue (
-    ID SERIAL PRIMARY KEY,
-    ID_Devise_source INT REFERENCES currency(currency_id),
-    ID_Devise_destination INT REFERENCES currency(currency_id),
-    Montant DECIMAL(10, 2) NOT NULL,
-    Date_effet DATE NOT NULL
+    id_currency_value UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id_currency INT REFERENCES currency(currency_deeplid),
+    id_currency_destination INT REFERENCES currency(currency_id),
+    amount DECIMAL(10, 2) NOT NULL,
+    date_effect TIMESTAMP NOT NULL
 );
 
 GRANT SELECT ON TABLE currencyValue TO mandrindra;
+
+    CREATE TABLE transfer_history (
+        id_transfer_history UUID PRIMARY KEY,
+        debit_transaction_id UUID NOT NULL,
+        credit_transaction_id UUID NOT NULL,
+        transfer_date TIMESTAMP NOT NULL,
+        amount DECIMAL(10, 2) DEFAULT 0.00
+    );
+
+GRANT SELECT ON TABLE transfer_history TO mandrindra;
