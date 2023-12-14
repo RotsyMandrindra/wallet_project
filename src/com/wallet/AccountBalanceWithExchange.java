@@ -18,14 +18,18 @@ public class AccountBalanceWithExchange {
             try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
                 UUID accountId = UUID.fromString("efcf34e5-c7a2-427d-a402-f466b36453d1");
 
-                performTransfer(connection, accountId, 1, 1.0, "2023-12-05 12:00:00");
-                performTransfer(connection, accountId, 2, 1.0, "2023-12-06 12:00:00");
+                performTransfer(connection, accountId, UUID.randomUUID(), 1.0, "2023-12-06 12:00:00");
+                performTransfer(connection, accountId, UUID.randomUUID(), 1.0, "2023-12-06 18:00:00");
 
                 performExpense(connection, accountId, UUID.randomUUID(), "New shoe at this time", "2023-12-06 16:00:00");
 
-                updateExchangeRate(connection, "2023-12-06", 10000);
+                updateExchangeRate(connection, "2023-12-06 12:00:00", 4500);
+                updateExchangeRate(connection, "2023-12-06 06:00:00", 4600);
+                updateExchangeRate(connection, "2023-12-06 12:00:00", 4550);
+                updateExchangeRate(connection, "2023-12-06 16:00:00", 4650);
+                updateExchangeRate(connection, "2023-12-06 18:00:00", 4690);
 
-                double currentBalance = getAccountBalance(connection, accountId);
+                double currentBalance = getAccountBalance(connection, accountId, "2023-12-06 14:00:00");
                 System.out.println("Current balance : " + currentBalance + " Ariary");
             }
         } catch (SQLException | IOException e) {
@@ -45,84 +49,75 @@ public class AccountBalanceWithExchange {
         return properties;
     }
 
-    private static void performTransfer(Connection connection, UUID accountId, int transactionId, double euroAmount, String transactionDate) throws SQLException {
-        double exchangeRate = getExchangeRate(connection, transactionDate);
+    private static void performTransfer(Connection connection, UUID accountId, UUID transactionId, double euroAmount, String transactionDate) throws SQLException {
+        double exchangeRate = getWeightedAverageExchangeRate(connection, transactionDate);
         double ariaryAmount = euroAmount * exchangeRate;
 
         String insertTransactionSql = "INSERT INTO transaction (transaction_id, account_id, amount, transaction_date, transaction_type) VALUES (?, ?, ?, ?, 'credit')";
         try (PreparedStatement statement = connection.prepareStatement(insertTransactionSql)) {
-            statement.setObject(1, UUID.randomUUID());
+            statement.setObject(1, transactionId, Types.OTHER);
             statement.setObject(2, accountId, Types.OTHER);
             statement.setDouble(3, ariaryAmount);
             statement.setTimestamp(4, Timestamp.valueOf(transactionDate));
-
             statement.executeUpdate();
         }
     }
 
-
     private static void performExpense(Connection connection, UUID accountId, UUID transactionId, String description, String transactionDate) throws SQLException {
-        String selectTransactionSql = "SELECT COUNT(*) FROM transaction WHERE account_id = ? AND transaction_date = ? AND description = ?";
+        String checkTransactionSql = "SELECT COUNT(*) FROM transaction WHERE account_id = ? AND transaction_date = ?::timestamp AND description = ?";
+        try (PreparedStatement checkStatement = connection.prepareStatement(checkTransactionSql)) {
+            checkStatement.setObject(1, accountId, Types.OTHER);
+            checkStatement.setTimestamp(2, Timestamp.valueOf(transactionDate));
+            checkStatement.setString(3, description);
 
-        try (PreparedStatement selectStatement = connection.prepareStatement(selectTransactionSql)) {
-            selectStatement.setObject(1, accountId, Types.OTHER);
-            selectStatement.setTimestamp(2, Timestamp.valueOf(transactionDate));
-            selectStatement.setString(3, description);
-
-            try (ResultSet resultSet = selectStatement.executeQuery()) {
+            try (ResultSet resultSet = checkStatement.executeQuery()) {
                 resultSet.next();
                 int count = resultSet.getInt(1);
 
                 if (count == 0) {
                     String insertTransactionSql = "INSERT INTO transaction (transaction_id, account_id, amount, transaction_date, transaction_type, description) VALUES (?, ?, ?, ?, 'debit', ?)";
-                    try (PreparedStatement insertStatement = connection.prepareStatement(insertTransactionSql)) {
-                        insertStatement.setObject(1, transactionId);
-                        insertStatement.setObject(2, accountId, Types.OTHER);
-                        insertStatement.setDouble(3, 30000);
-                        insertStatement.setTimestamp(4, Timestamp.valueOf(transactionDate));
-                        insertStatement.setString(5, description);
-                        insertStatement.executeUpdate();
+                    try (PreparedStatement statement = connection.prepareStatement(insertTransactionSql)) {
+                        statement.setObject(1, transactionId, Types.OTHER);
+                        statement.setObject(2, accountId, Types.OTHER);
+                        statement.setDouble(3, 30000);
+                        statement.setTimestamp(4, Timestamp.valueOf(transactionDate));
+                        statement.setString(5, description);
+                        statement.executeUpdate();
                     }
                 } else {
-                    System.out.println("Transaction already exists, no insertion required.");
+                    System.out.println("The transaction already exists.");
                 }
             }
         }
     }
 
-
     private static void updateExchangeRate(Connection connection, String date, double newRate) throws SQLException {
-        String formattedDate = date + " 00:00:00";
         String updateRateSql = "UPDATE exchange_rate SET rate = ? WHERE date = ?";
         try (PreparedStatement statement = connection.prepareStatement(updateRateSql)) {
             statement.setDouble(1, newRate);
-            statement.setTimestamp(2, Timestamp.valueOf(formattedDate));
+            statement.setTimestamp(2, Timestamp.valueOf(date));
             statement.executeUpdate();
         }
     }
 
-
-    private static double getExchangeRate(Connection connection, String date) throws SQLException {
-        String selectRateSql = "SELECT rate FROM exchange_rate WHERE date <= ?::timestamp ORDER BY date DESC LIMIT 1";
-        try (PreparedStatement statement = connection.prepareStatement(selectRateSql)) {
+    private static double getWeightedAverageExchangeRate(Connection connection, String date) throws SQLException {
+        String selectWeightedAverageSql = "SELECT AVG(rate) FROM exchange_rate WHERE date::date = ?::date";
+        try (PreparedStatement statement = connection.prepareStatement(selectWeightedAverageSql)) {
             statement.setString(1, date);
-
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return resultSet.getDouble("rate");
+                    return resultSet.getDouble(1);
                 } else {
-                    throw new SQLException("Exchange rate not found for the specified date.");
+                    throw new SQLException("Weighted average exchange rate not found for the specified date.");
                 }
             }
         }
     }
 
-
-
-    private static double getAccountBalance(Connection connection, UUID accountId) throws SQLException {
-        String selectBalanceSql = "SELECT COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE -amount END), 0) AS balance FROM transaction WHERE account_id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(selectBalanceSql)) {
+    private static double getAccountBalance(Connection connection, UUID accountId, String date) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE -amount END), 0) AS balance FROM transaction WHERE account_id = ? AND transaction_date <= ?::timestamp")) {
             statement.setObject(1, accountId, Types.OTHER);
+            statement.setTimestamp(2, Timestamp.valueOf(date));
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return resultSet.getDouble("balance");
