@@ -127,4 +127,42 @@ public class AccountBalanceWithExchange {
             }
         }
     }
+    private static double getExchangeRate(Connection connection, String date, AggregationType aggregationType) throws SQLException {
+        String aggregationFunction;
+        switch (aggregationType) {
+            case WEIGHTED_AVERAGE:
+                aggregationFunction = "AVG";
+                break;
+            case MINIMUM:
+                aggregationFunction = "MIN";
+                break;
+            case MAXIMUM:
+                aggregationFunction = "MAX";
+                break;
+            case MEDIAN:
+                throw new UnsupportedOperationException("Median aggregation not supported in PostgreSQL");
+            default:
+                throw new IllegalArgumentException("Invalid aggregation type");
+        }
+
+        String selectExchangeRateSql = String.format("SELECT %s(rate) FROM exchange_rate WHERE date::date = ?::date", aggregationFunction);
+        try (PreparedStatement statement = connection.prepareStatement(selectExchangeRateSql)) {
+            statement.setString(1, date);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getDouble(1);
+                } else {
+                    throw new SQLException("Exchange rate not found for the specified date.");
+                }
+            }
+        }
+    }
+
+    private enum AggregationType {
+        WEIGHTED_AVERAGE,
+        MINIMUM,
+        MAXIMUM,
+        MEDIAN
+    }
+
 }
