@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.util.Properties;
+import java.util.UUID;
 
 public class AccountBalanceAtDate {
     public static void main(String[] args) {
@@ -15,11 +16,11 @@ public class AccountBalanceAtDate {
             String dbPassword = properties.getProperty("dbPassword");
 
             try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
-                int accountId = 1;
+                UUID accountId = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
                 Timestamp targetDate = Timestamp.valueOf("2023-12-06 15:45:00");
 
                 double balance = getAccountBalanceAtDate(connection, accountId, targetDate);
-                System.out.println("Solde du compte à la date spécifiée : " + balance);
+                System.out.println("Account balance on specified date :" + balance);
             }
         } catch (SQLException | IOException e) {
             e.printStackTrace();
@@ -38,20 +39,20 @@ public class AccountBalanceAtDate {
         return properties;
     }
 
-    private static double getAccountBalanceAtDate(Connection connection, int accountId, Timestamp targetDate) throws SQLException {
+    private static double getAccountBalanceAtDate(Connection connection, UUID accountId, Timestamp targetDate) throws SQLException {
         String sql = "SELECT COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE -amount END), 0) AS balance " +
                 "FROM transaction " +
                 "WHERE account_id = ? AND transaction_date <= ?";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, accountId);
+            statement.setObject(1, accountId, Types.OTHER);
             statement.setTimestamp(2, targetDate);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return resultSet.getDouble("balance");
                 } else {
-                    throw new SQLException("Aucun résultat obtenu.");
+                    throw new SQLException("No results obtained.");
                 }
             }
         }

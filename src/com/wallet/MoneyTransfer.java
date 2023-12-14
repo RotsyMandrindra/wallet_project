@@ -40,7 +40,7 @@ public class MoneyTransfer {
     }
 
     private static void transferMoney(Connection connection, UUID debitAccountId, UUID creditAccountId, double amount) throws SQLException {
-        if (debitAccountId == creditAccountId) {
+        if (debitAccountId.equals(creditAccountId)) {
             throw new IllegalArgumentException("Le compte débiteur ne peut pas être le même que le compte créditeur.");
         }
 
@@ -85,38 +85,18 @@ public class MoneyTransfer {
         }
     }
 
-
     private static void addTransferHistoryEntry(Connection connection, UUID debitTransactionId, UUID creditTransactionId) throws SQLException {
-        String sql = "INSERT INTO TransferHistory (debit_transaction_id, credit_transaction_id, transfer_date) " +
-                "VALUES (?, ?, CURRENT_TIMESTAMP)";
+        String sql = "INSERT INTO transfer_history (id_transfer_history, debit_transaction_id, credit_transaction_id, transfer_date, amount) " +
+                "VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setObject(1, debitTransactionId);
-            statement.setObject(2, creditTransactionId);
+            UUID transferHistoryId = UUID.randomUUID();
 
+            statement.setObject(1, transferHistoryId);
+            statement.setObject(2, debitTransactionId);
+            statement.setObject(3, creditTransactionId);
+            statement.setDouble(4, 100.0);
             statement.executeUpdate();
-        }
-    }
-
-    private static double getAriaryBalanceAtDate(Connection connection, int accountId, Timestamp targetDate) throws SQLException {
-        String sql = "SELECT COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount * cv.Montant ELSE -amount * cv.Montant END), 0) AS balance " +
-                "FROM \"transaction\" t " +
-                "JOIN CurrencyValue cv ON t.transaction_date >= cv.Date_effet " +
-                "WHERE t.account_id = ? AND t.transaction_date <= ? " +
-                "AND cv.ID_Devise_source = (SELECT currency_id FROM currency WHERE currency_name = 'EURO') " +
-                "AND cv.ID_Devise_destination = (SELECT currency_id FROM currency WHERE currency_name = 'ARIARY')";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setObject(1, accountId);
-            statement.setTimestamp(2, targetDate);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getDouble("balance");
-                } else {
-                    throw new SQLException("No results obtained.");
-                }
-            }
         }
     }
 }

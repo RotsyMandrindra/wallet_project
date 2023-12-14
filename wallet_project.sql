@@ -74,8 +74,8 @@ INSERT INTO "transaction" (account_id, amount, transaction_date, description, tr
 
 CREATE TABLE IF NOT EXISTS currencyValue (
     id_currency_value UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    id_currency INT REFERENCES currency(currency_deeplid),
-    id_currency_destination INT REFERENCES currency(currency_id),
+    id_currency UUID REFERENCES currency(currency_id),
+    id_currency_destination UUID REFERENCES currency(currency_id),
     amount DECIMAL(10, 2) NOT NULL,
     date_effect TIMESTAMP NOT NULL
 );
@@ -91,3 +91,40 @@ GRANT SELECT ON TABLE currencyValue TO mandrindra;
     );
 
 GRANT SELECT ON TABLE transfer_history TO mandrindra;
+
+CREATE OR REPLACE FUNCTION getAriaryBalance(account_id UUID, target_date TIMESTAMP) RETURNS DOUBLE PRECISION AS $$
+DECLARE
+    current_balance DOUBLE PRECISION := 0;
+    exchange_rate DOUBLE PRECISION;
+BEGIN
+    SELECT COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE -amount END), 0)
+    INTO current_balance
+    FROM "transaction"
+    WHERE account_id = account_id AND transaction_date <= target_date;
+
+    SELECT amount
+    INTO exchange_rate
+    FROM CurrencyValue
+    WHERE date_effect = (
+        SELECT MAX(date_effect)
+        FROM CurrencyValue
+        WHERE date_effect <= target_date
+    );
+    current_balance := current_balance * exchange_rate;
+
+    RETURN current_balance;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT INSERT ON TABLE transfer_history TO mandrindra;
+
+CREATE TABLE exchange_rate (
+    date TIMESTAMP PRIMARY KEY,
+    rate DOUBLE PRECISION NOT NULL
+);
+
+GRANT SELECT ON TABLE exchange_rate TO mandrindra;
+
+INSERT INTO exchange_rate (date, rate) VALUES ('2023-12-05', 4600);
+
+GRANT UPDATE ON TABLE exchange_rate TO mandrindra;

@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 public class AccountBalanceHistory {
     public static void main(String[] args) {
@@ -17,13 +18,19 @@ public class AccountBalanceHistory {
             String dbPassword = properties.getProperty("dbPassword");
 
             try (Connection connection = DriverManager.getConnection(jdbcUrl, dbUser, dbPassword)) {
-                int accountId = 1;
+                UUID accountId = UUID.fromString("2e243ca9-a49d-4ca4-b699-3f4a6d64364d");
                 Timestamp startDate = Timestamp.valueOf("2023-12-01 00:00:00");
                 Timestamp endDate = Timestamp.valueOf("2023-12-06 16:00:00");
 
                 List<BalanceHistoryEntry> balanceHistory = getAccountBalanceHistory(connection, accountId, startDate, endDate);
-                for (BalanceHistoryEntry entry : balanceHistory) {
-                    System.out.println("Date: " + entry.getDate() + ", Solde: " + entry.getBalance());
+
+                if (balanceHistory.isEmpty()) {
+                    System.out.println("No balance history found for the account.");
+                } else {
+                    System.out.println("Account balance history :");
+                    for (BalanceHistoryEntry entry : balanceHistory) {
+                        System.out.println("Date : " + entry.getDate() + ", Balance : " + entry.getBalance());
+                    }
                 }
             }
         } catch (SQLException | IOException e) {
@@ -43,7 +50,7 @@ public class AccountBalanceHistory {
         return properties;
     }
 
-    private static List<BalanceHistoryEntry> getAccountBalanceHistory(Connection connection, int accountId, Timestamp startDate, Timestamp endDate) throws SQLException {
+    private static List<BalanceHistoryEntry> getAccountBalanceHistory(Connection connection, UUID accountId, Timestamp startDate, Timestamp endDate) throws SQLException {
         String sql = "SELECT transaction_date, COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE -amount END), 0) AS balance " +
                 "FROM transaction " +
                 "WHERE account_id = ? AND transaction_date BETWEEN ? AND ? " +
@@ -53,7 +60,7 @@ public class AccountBalanceHistory {
         List<BalanceHistoryEntry> balanceHistory = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, accountId);
+            statement.setObject(1, accountId, Types.OTHER);
             statement.setTimestamp(2, startDate);
             statement.setTimestamp(3, endDate);
 
