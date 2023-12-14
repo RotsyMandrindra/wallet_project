@@ -138,9 +138,9 @@ CREATE TABLE IF NOT EXISTS category (
 INSERT INTO category (name, transaction_type)
 VALUES 
     ('Restaurant', 'debit'),
-    ('Téléphone et Multimédia', 'debit'),
-    ('Salaire', 'credit'),
-    ('Prêt', 'credit')
+    ('Phone and Multimedia', 'debit'),
+    ('Salary', 'credit'),
+    ('Loan', 'credit')
 ON CONFLICT (name) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION calculate_balance(account_id UUID, start_date TIMESTAMP, end_date TIMESTAMP)
@@ -165,3 +165,28 @@ $$ LANGUAGE PLPGSQL;
 
 
 SELECT * FROM calculate_balance('efcf34e5-c7a2-427d-a402-f466b36453d1', '2023-12-08 17:33:57.331554', '2023-12-08 17:33:57.331554');
+
+CREATE OR REPLACE FUNCTION calculate_category_balance(account_id UUID, start_date TIMESTAMP, end_date TIMESTAMP)
+RETURNS TABLE (restaurant DECIMAL, phone_multimedia DECIMAL, salary DECIMAL, loan DECIMAL) AS
+$$
+BEGIN
+    SELECT
+        COALESCE(SUM(CASE WHEN t.category_id = 'Restaurant' THEN amount END), 0) AS restaurant,
+        COALESCE(SUM(CASE WHEN t.category_id = 'Phone and Multimedia' THEN amount END), 0) AS phone_multimedia,
+        COALESCE(SUM(CASE WHEN t.category_id = 'Salary' THEN amount END), 0) AS salary,
+        COALESCE(SUM(CASE WHEN t.category_id = 'Loan' THEN amount END), 0) AS loan
+    INTO
+        restaurant,
+        phone_multimedia,
+        salary,
+        loan
+    FROM
+        category c
+    LEFT JOIN
+        transaction t ON c.name = t.category_id AND t.account_id = account_id AND t.transaction_date BETWEEN start_date AND end_date
+    GROUP BY
+        c.name;
+
+    RETURN NEXT;
+END;
+$$ LANGUAGE PLPGSQL;
